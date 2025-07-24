@@ -1,15 +1,15 @@
-name: Deploy to EC2
+name: Deploy Instance Code to EC2
 
 on:
   push:
     paths:
       - 'instance-code/**'
     branches:
-      - main  # or whichever branch you use
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # This is the GitHub Actions runner, not your EC2 OS
 
     steps:
       - name: Checkout code
@@ -22,10 +22,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: SSH into EC2 and Pull + Deploy
+      - name: SSH into EC2 and Pull Latest Code
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             cd ${{ secrets.EC2_DIR }}
-            git reset --hard HEAD  # discard local changes
+            git reset --hard HEAD
             git pull origin main
           EOF
