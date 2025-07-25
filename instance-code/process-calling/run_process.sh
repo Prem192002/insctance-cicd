@@ -1,29 +1,40 @@
 #!/bin/bash
 
-cd ~/instance-cicd/instance-code/process-calling
+# Navigate to script directory (ensures script works no matter where it's called from)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
 
+# Activate virtual environment if using one (optional)
+# source venv/bin/activate
+
+# Detect current branch
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch: $BRANCH"
 
-# Choose port based on branch
-if [ "$BRANCH" == "main" ]; then
-  PORT=8000
+# Decide port based on branch
+PORT=8000
+if [ "$BRANCH" == "develop" ]; then
+    PORT=8002
 elif [ "$BRANCH" == "stage" ]; then
-  PORT=8001
-elif [ "$BRANCH" == "develop" ]; then
-  PORT=8002
-else
-  PORT=8003  # fallback
+    PORT=8001
 fi
 
 echo "Using port: $PORT for branch: $BRANCH"
 
-# Kill any process using this port
+# Kill any existing process on this port
 PID=$(lsof -t -i:$PORT)
-if [ ! -z "$PID" ]; then
-  echo "Killing process on port $PORT (PID: $PID)"
-  kill -9 $PID
+if [ -n "$PID" ]; then
+    echo "Killing process on port $PORT (PID: $PID)"
+    kill -9 $PID
+else
+    echo "No existing process on port $PORT"
 fi
 
-# Run FastAPI app in background
-nohup uvicorn main:app --host 0.0.0.0 --port $PORT > app.log 2>&1 &
+# Ensure logs directory exists
+mkdir -p logs
+
+# Start FastAPI app with uvicorn in background and log output
+echo "Starting FastAPI app on port $PORT..."
+nohup uvicorn main:app --host 0.0.0.0 --port $PORT > logs/fastapi_$PORT.log 2>&1 &
+
 echo "FastAPI app started on port $PORT"

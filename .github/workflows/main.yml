@@ -20,38 +20,38 @@ jobs:
       - name: Set DEPLOY_ENV based on branch
         id: set_env
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "DEPLOY_ENV=main" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "stage" ]]; then
-            echo "DEPLOY_ENV=stage" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            echo "DEPLOY_ENV=develop" >> $GITHUB_ENV
-          else
-            echo "Unsupported branch"
-            exit 1
-          fi
+          echo "DEPLOY_ENV=${{ github.ref_name }}" >> $GITHUB_ENV
 
-      - name: Set up SSH
+      - name: Set up SSH key
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
           chmod 400 ec2_key.pem
 
-      - name: Deploy on EC2
+      - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST << 'EOF'
-            set -e
-            cd ~/insctance-cicd
-            git fetch origin
-            git checkout ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
+            set -ex
 
-            # Install requirements (once)
-            pip3 install --user -r instance-code/process-calling/requirements.txt
+          echo "➡️ Switching to branch ${{ env.DEPLOY_ENV }}"
+          cd ~/instance-cicd
 
-            # Run app
-            chmod +x instance-code/process-calling/run_process.sh
-            ./instance-code/process-calling/run_process.sh
-            echo "Deployment completed on ${{ github.ref_name }} branch"
+          echo "🧹 Cleaning local changes"
+          git reset --hard
+          git clean -fd
+
+          echo "📥 Fetching latest code"
+          git fetch origin
+          git checkout ${{ env.DEPLOY_ENV }}
+          git reset --hard origin/${{ env.DEPLOY_ENV }}
+
+          echo "📦 Installing dependencies"
+          pip3 install --user -r instance-code/process-calling/requirements.txt
+
+          echo "🚀 Running deployment script"
+          chmod +x instance-code/process-calling/run_process.sh
+          ./instance-code/process-calling/run_process.sh
+
+          echo "✅ Deployment completed on ${{ env.DEPLOY_ENV }} branch"
           EOF
