@@ -1,30 +1,29 @@
 #!/bin/bash
 
-# Navigate to the project directory
-# cd instance-code/process-calling || exit 1
+cd ~/instance-cicd/instance-code/process-calling
 
-# Install dependencies
-pip install -r requirements.txt
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Determine port based on branch (passed from GitHub Actions)
-case "$DEPLOY_ENV" in
-  "develop")
-    PORT=8002
-    ;;
-  "stage")
-    PORT=8001
-    ;;
-  "main")
-    PORT=8000
-    ;;
-  *)
-    echo "Invalid branch/environment. Exiting."
-    exit 1
-    ;;
-esac
+# Choose port based on branch
+if [ "$BRANCH" == "main" ]; then
+  PORT=8000
+elif [ "$BRANCH" == "stage" ]; then
+  PORT=8001
+elif [ "$BRANCH" == "develop" ]; then
+  PORT=8002
+else
+  PORT=8003  # fallback
+fi
 
-# Run the FastAPI app
-# Run FastAPI app in the background with nohup
-nohup uvicorn main:app --host 0.0.0.0 --port "$PORT" > server.log 2>&1 &
+echo "Using port: $PORT for branch: $BRANCH"
 
+# Kill any process using this port
+PID=$(lsof -t -i:$PORT)
+if [ ! -z "$PID" ]; then
+  echo "Killing process on port $PORT (PID: $PID)"
+  kill -9 $PID
+fi
+
+# Run FastAPI app in background
+nohup uvicorn main:app --host 0.0.0.0 --port $PORT > app.log 2>&1 &
 echo "FastAPI app started on port $PORT"
