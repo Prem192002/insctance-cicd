@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to the project directory
-cd instance-code/process-calling || exit 1
+# cd instance-code/process-calling || exit 1
 
 # Install dependencies
 pip install -r requirements.txt
