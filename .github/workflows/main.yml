@@ -43,5 +43,6 @@ jobs:
             git reset --hard
             git pull origin ${{ github.ref_name }}
             export DEPLOY_ENV=${{ env.DEPLOY_ENV }}
+            cd instance-code/process-calling
             bash run_process.sh
           EOF
