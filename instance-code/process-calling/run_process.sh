@@ -24,5 +24,7 @@ case "$DEPLOY_ENV" in
 esac
 
 # Run the FastAPI app
-echo "Starting FastAPI app on port $PORT..."
-uvicorn main:app --host 0.0.0.0 --port "$PORT"
+# Run FastAPI app in the background with nohup
+nohup uvicorn main:app --host 0.0.0.0 --port "$PORT" > server.log 2>&1 &
+
+echo "FastAPI app started on port $PORT"
