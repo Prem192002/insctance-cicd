@@ -6,8 +6,6 @@ on:
       - main
       - stage
       - develop
-    paths:
-      - 'instance-code/**'
 
 jobs:
   deploy-instance:
@@ -35,7 +33,7 @@ jobs:
             set -ex
 
           echo "➡️ Switching to branch ${{ env.DEPLOY_ENV }}"
-          cd ~/instance-cicd
+          cd ~/insctance-cicd
 
           echo "🧹 Cleaning local changes"
           git reset --hard
