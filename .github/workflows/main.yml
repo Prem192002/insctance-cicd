@@ -41,7 +41,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@ec2-13-232-1-228.ap-south-1.compute.amazonaws.com << EOF
             cd insctance-cicd
             git reset --hard
-            git pull origin ${{ github.ref_name }}
+            git pull --ff-only origin ${{ github.ref_name }} || git pull --no-rebase origin ${{ github.ref_name }}
             export DEPLOY_ENV=${{ env.DEPLOY_ENV }}
             cd instance-code/process-calling
             bash run_process.sh
