@@ -14,7 +14,7 @@ class Item(BaseModel):
 # Root route
 @app.get("/")
 def read_root():
-    return {"Hello from FastAPI"}
+    return {"FastAPI is working fine"}
 
 # Item creation route
 @app.post("/items/")
