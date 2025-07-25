@@ -1,4 +1,4 @@
-name: Deploy Instance Code to EC2
+name: EC2 Instance Deployment
 
 on:
   push:
@@ -10,31 +10,38 @@ on:
       - 'instance-code/**'
 
 jobs:
-  deploy:
+  deploy-instance:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
+      - name: Set DEPLOY_ENV based on branch
+        id: set_env
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "DEPLOY_ENV=main" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "stage" ]]; then
+            echo "DEPLOY_ENV=stage" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "DEPLOY_ENV=develop" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch"
+            exit 1
+          fi
 
-      # **Set up Python 3.9**
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: SSH into EC2, Pull Code, Install Dependencies, and Run
+      - name: Set up SSH
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            cd ${{ secrets.EC2_DIR }}
-            git reset --hard HEAD
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+          chmod 400 ec2_key.pem
+
+      - name: SSH into EC2 and deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@ec2-13-232-1-228.ap-south-1.compute.amazonaws.com << EOF
+            cd insctance-cicd
+            git reset --hard
             git pull origin ${{ github.ref_name }}
-
+            export DEPLOY_ENV=${{ env.DEPLOY_ENV }}
+            bash run_process.sh
           EOF
