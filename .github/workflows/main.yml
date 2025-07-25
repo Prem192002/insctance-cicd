@@ -35,7 +35,7 @@ jobs:
             set -e
 
             echo "➡️ Switching to branch ${{ env.DEPLOY_ENV }}"
-            cd ~/instance-cicd
+            cd ~/insctance-cicd
             git fetch origin
             git checkout ${{ env.DEPLOY_ENV }}
             git reset --hard origin/${{ env.DEPLOY_ENV }}
