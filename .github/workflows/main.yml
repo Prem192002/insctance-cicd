@@ -36,13 +36,21 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
           chmod 400 ec2_key.pem
 
-      - name: SSH into EC2 and deploy
+      - name: Deploy on EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@ec2-13-232-1-228.ap-south-1.compute.amazonaws.com << EOF
-            cd insctance-cicd
-            git reset --hard
-            git pull --ff-only origin ${{ github.ref_name }} || git pull --no-rebase origin ${{ github.ref_name }}
-            export DEPLOY_ENV=${{ env.DEPLOY_ENV }}
-            cd instance-code/process-calling
-            bash run_process.sh
-          EOF
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST << 'EOF'
+            set -e
+            cd ~/instance-cicd
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
+
+            # Install requirements (once)
+            pip3 install --user -r instance-code/process-calling/requirements.txt
+
+            # Run app
+            chmod +x instance-code/process-calling/run_process.sh
+            ./instance-code/process-calling/run_process.sh
+EOF
