@@ -24,6 +24,12 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      # **Set up Python 3.9**
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
       - name: SSH into EC2, Pull Code, Install Dependencies, and Run
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
@@ -31,19 +37,9 @@ jobs:
             git reset --hard HEAD
             git pull origin ${{ github.ref_name }}
 
-            # Setup Python 3.9 (Amazon Linux comes with 3.7 or older by default)
-            if ! python3.9 --version &>/dev/null; then
-              sudo amazon-linux-extras enable python3.8
-              sudo yum install -y python3.8
-              sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
-            fi
-
             # Navigate to process-calling and install dependencies
             cd process-calling
             python3 -m pip install --upgrade pip
             pip3 install -r requirements.txt
 
-            # Go back and run the script
-            # cd ..
-            # bash run_process.sh
           EOF
