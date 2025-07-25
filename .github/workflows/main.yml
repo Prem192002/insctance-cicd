@@ -37,9 +37,4 @@ jobs:
             git reset --hard HEAD
             git pull origin ${{ github.ref_name }}
 
-            # Navigate to process-calling and install dependencies
-            cd process-calling
-            python3 -m pip install --upgrade pip
-            pip3 install -r requirements.txt
-
           EOF
