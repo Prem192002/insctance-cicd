@@ -31,21 +31,27 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST << EOF
-            set -e
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST << 'EOF'
+            set -ex
 
-            echo "➡️ Switching to branch ${{ env.DEPLOY_ENV }}"
-            cd ~/insctance-cicd
-            git fetch origin
-            git checkout ${{ env.DEPLOY_ENV }}
-            git reset --hard origin/${{ env.DEPLOY_ENV }}
+          echo "➡️ Switching to branch ${{ env.DEPLOY_ENV }}"
+          cd ~/instance-cicd
 
-            echo "📦 Installing dependencies"
-            pip3 install --user -r instance-code/process-calling/requirements.txt
+          echo "🧹 Cleaning local changes"
+          git reset --hard
+          git clean -fd
 
-            echo "🚀 Running deployment script"
-            chmod +x instance-code/process-calling/run_process.sh
-            ./instance-code/process-calling/run_process.sh
+          echo "📥 Fetching latest code"
+          git fetch origin
+          git checkout ${{ env.DEPLOY_ENV }}
+          git reset --hard origin/${{ env.DEPLOY_ENV }}
 
-            echo "✅ Deployment completed on ${{ env.DEPLOY_ENV }} branch"
+          echo "📦 Installing dependencies"
+          pip3 install --user -r instance-code/process-calling/requirements.txt
+
+          echo "🚀 Running deployment script"
+          chmod +x instance-code/process-calling/run_process.sh
+          ./instance-code/process-calling/run_process.sh
+
+          echo "✅ Deployment completed on ${{ env.DEPLOY_ENV }} branch"
           EOF
