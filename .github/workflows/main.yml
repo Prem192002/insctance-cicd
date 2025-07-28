@@ -69,7 +69,7 @@ jobs:
 
             echo "Running FastAPI app"
             chmod +x instance-code/process-calling/run_process.sh
-            ./instance-code/process-calling/run_process.sh
+            ./instance-code/process-calling/run_process.sh "$BRANCH_NAME"
 
             echo "Deployment completed for \$BRANCH_NAME"
             EOF
