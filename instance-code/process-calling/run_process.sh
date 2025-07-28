@@ -3,8 +3,13 @@ set -e
 
 cd "$(dirname "$0")"  # Go to the script directory
 
-# Determine branch name
-BRANCH_NAME=${BRANCH_NAME:-$(basename "$(dirname "$(dirname "$PWD")")")}
+# Accept branch name as argument
+BRANCH_NAME=$1
+
+if [ -z "$BRANCH_NAME" ]; then
+  echo "Error: Branch name not provided as argument."
+  exit 1
+fi
 
 # Map branch to port
 case "$BRANCH_NAME" in
