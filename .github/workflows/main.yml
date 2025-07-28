@@ -25,10 +25,10 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST <<'EOF'
-            set -ex
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST <<EOF
+            set -e
 
-            # Map GitHub branch to EC2 folder
+            echo "Mapping GitHub branch to EC2 folder"
             case "$BRANCH_NAME" in
               main)
                 FOLDER_NAME="main"
@@ -45,28 +45,27 @@ jobs:
                 ;;
             esac
 
-            # Define target path
             BASE_DIR="/home/ec2-user"
-            TARGET_DIR="$BASE_DIR/$FOLDER_NAME/insctance-cicd"
+            TARGET_DIR="\$BASE_DIR/\$FOLDER_NAME/insctance-cicd"
 
-            echo " Navigating to $TARGET_DIR"
-            cd $TARGET_DIR
+            echo "Navigating to \$TARGET_DIR"
+            cd \$TARGET_DIR
 
-            echo " Cleaning local changes"
+            echo " Cleaning up any local changes"
             git reset --hard
             git clean -fd
 
-            echo " Fetching latest code from $BRANCH_NAME"
+            echo " Fetching and resetting to branch: \$BRANCH_NAME"
             git fetch origin
-            git checkout $BRANCH_NAME
-            git reset --hard origin/$BRANCH_NAME
+            git checkout \$BRANCH_NAME
+            git reset --hard origin/\$BRANCH_NAME
 
-            echo " Installing dependencies"
+            echo "Installing Python dependencies"
             pip3 install --user -r instance-code/process-calling/requirements.txt
 
-            echo " Running FastAPI app"
+            echo "Running FastAPI application"
             chmod +x instance-code/process-calling/run_process.sh
-            ./instance-code/process-calling/run_process.sh
+            BRANCH_NAME=\$BRANCH_NAME ./instance-code/process-calling/run_process.sh
 
-            echo " Deployment completed for $BRANCH_NAME"
-          EOF
+            echo "Deployment completed for branch: \$BRANCH_NAME"
+            EOF
