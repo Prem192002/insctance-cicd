@@ -72,4 +72,4 @@ jobs:
             ./instance-code/process-calling/run_process.sh "$BRANCH_NAME"
 
             echo "Deployment completed for \$BRANCH_NAME"
-            EOF
+          EOF
