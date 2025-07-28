@@ -14,7 +14,7 @@ class Item(BaseModel):
 # Root route
 @app.get("/")
 def read_root():
-    return {"updated file structure"}
+    return {"updated the api"}
 
 # Item creation route
 @app.post("/items/")
