@@ -20,18 +20,20 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
           chmod 400 ec2_key.pem
 
-      - name: Deploy FastAPI to EC2 with folder mapping
+      - name: Deploy FastAPI to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          BRANCH_NAME="${{ github.ref_name }}"
           echo "Deploying branch: $BRANCH_NAME"
 
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST bash <<EOF
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ec2-user@$EC2_HOST "bash -s" <<EOF
             set -ex
 
+            BRANCH_NAME="${BRANCH_NAME}"
+
             echo "Mapping GitHub branch to EC2 folder"
-            case "$BRANCH_NAME" in
+            case "\$BRANCH_NAME" in
               main)
                 FOLDER_NAME="main"
                 ;;
